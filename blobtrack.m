@@ -48,9 +48,6 @@ blobAnalysis = vision.BlobAnalysis('AreaOutputPort', false, ... % Set blob analy
 vid_src.Tag = 'motion detection setup';
 
 
-% thresholdblack=0;
-
-
 set(gcf,'doublebuffer','on');
 preview(vid);
 
@@ -68,19 +65,14 @@ hCheckbox = uicontrol('Style','checkbox',...
     'Value',0,'Position', [.8 .100 .4 .05], ...
     'FontSize', 14);
 
-%% material sample properties 
+%%%%%%%%%%%%%%%%%%%%%%%%%%% material sample properties%%%%%%%%%%%%%change values before start%%%%%%%%%%%%%%
 Area = 13*3;  %write area of sample for stress F/A in mm^2;
-Dis = 1024;
+Dis = 900; %pixel to pixel distance can be measured using the app provided
 color = 0; % just a condition to work on black or white test piece,change value to any other +integer to work on black 0 for white
 Fmax =0; 
 n=0;
 caliberation_factor  =1; 
-% % %% serial port arduino opening
-% % delete(instrfindall)
-% % serialportlist('available')
-% % s = serial('COM4')
-% % s.BaudRate =115200;
-% % fopen(s);
+
 %% plotting 
 subplot(2,2,1); 
 h.plot = plot(NaN,NaN,'-k'); hold on;
@@ -122,20 +114,18 @@ while timeforexp ==1
             hplot= plot(cX,cY,'y+' ,'MarkerSize', 5, 'LineWidth', 2);
             hText = text(cX, cY,strcat('X:',num2str(round(cX)),'Y:',num2str(round(cY))));
             for j =1
-                %Y(i,j) = [round(cY)]
+                %Y(i,j) = [round(cY)]  %camera needs to be rotated 90 deg because it counts blobs from left to right in X direction 
                 X(i,j) =[round(cX)];
             end
         end
         D = X(1,:) -X(end,:); %finds the toppest point and last point in the image and subtracts to fins the distance
-        distance = (D/Dis);
+        distance = (D/Dis); %finding strain percentage.
         hold off
-%         drawnow; (not rquired now coz its already used for updating plot
-%         in the next step
         
     else
         msgbox('dang!, no blobs found'); %(delete this else loop if it anoys you)
         pause(0.5);
-%        break;
+      break;
     end
   strain = abs(distance) * caliberation_factor     ;      %abs for only +values
  out = fscanf(s);
@@ -152,12 +142,12 @@ if F < Fmax *0.6 && F>0
      return;
 %     break;
 end
-  stress = F *9.8/ Area;
+  stress = F *9.8/ Area; %force value from load cell is in kg
   
 data.X(end+1) = strain;
 data.Y(end+1) = stress;
 
-% set(h.plot, 'xdata', data.X, 'ydata', data.Y);
+set(h.plot, 'xdata', data.X, 'ydata', data.Y);
 if length(data.X) > 50
    data.Xm(end+1) = mean(data.X(end-50:end));
    data.Ym(end+1) = mean(data.Y(end-50:end));
@@ -179,8 +169,7 @@ maxstress = Fmax*9.8/Area;
 
 end
 	
-	% Print the values out to the command window.
-
+	
 stop(vid)
 delete(vid)
 fclose(s);
